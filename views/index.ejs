@@ -1,0 +1,98 @@
+<canvas></canvas>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+       const canvas = document.querySelector("canvas")
+       const SPEED = "<%= SPEED %>";
+       const _sizePlayer = "<%= sizePlayer %>";
+       canvas.width = "<%= sizeScreen %>";
+       canvas.height = "<%= sizeScreen %>";
+       canvas.style.border = "1px black solid"
+
+       const ctx = canvas.getContext("2d")
+
+       class Player {
+              constructor ({ x, y, id }) {
+                     this.x = x;
+                     this.y = y;
+                     this.id = id;
+              }
+
+              replaceAttributes({ x, y, id }) {
+                     this.id = id
+                     this.x = x
+                     this.y = y
+              }
+       }
+
+       const objPlayerReference = {}
+
+       let myPlayer
+
+       const socket = io("ws://localhost:4000");
+
+       socket.on("client-connected", playerObj => {
+              myPlayer = new Player(playerObj);
+
+              socket.emit("handle-player-move", myPlayer)
+       })
+
+       socket.on("client-player-has-moved", player => {
+
+              if (myPlayer.id === player.id) {
+                     myPlayer.replaceAttributes(player)
+              }
+
+              objPlayerReference[player.id] = player
+       })
+
+       function update() {
+
+              const players = Object.values(objPlayerReference)
+
+              ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+              for (const player of players) {
+
+                     ctx.fillRect(player.x, player.y, _sizePlayer, _sizePlayer)
+              }
+       }
+
+       function loop() {
+              update()
+              requestAnimationFrame(loop)
+       }
+
+       loop()
+
+       socket.on("handle-disconnect-player", id => {
+              delete objPlayerReference[id]
+       })
+
+       function jump() {
+              const id = myPlayer.id
+              const player = { ...objPlayerReference[id] }
+
+              player.y *= 0.5
+
+              socket.emit("handle-player-move-jump", player)
+       }
+
+
+       function moveLeftRight(direction) {
+              const id = myPlayer.id
+              const player = { ...objPlayerReference[id] }
+
+              const speed = Number(SPEED)
+
+              if (direction === "LEFT") {
+
+                     player.x -= speed
+              } else if (direction === "RIGHT") {
+                     player.x += speed
+              }
+
+              socket.emit("handle-player-move", player)
+       }
+
+       <%- include('./controls.ejs') %>
+</script>

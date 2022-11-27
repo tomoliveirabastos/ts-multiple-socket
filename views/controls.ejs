@@ -1,0 +1,22 @@
+document.addEventListener("keydown", e => {
+       switch (e.key) {
+              case "ArrowUp":
+                     jump()
+                     return;
+              case "ArrowLeft":
+                     moveLeftRight("LEFT")
+                     return;
+              case "ArrowRight":
+                     moveLeftRight("RIGHT")
+                     return;
+              case "w":
+                     jump()
+                     return;
+              case "a":
+                     moveLeftRight("LEFT")
+                     return;
+              case "d":
+                     moveLeftRight("RIGHT")
+                     return;
+       }
+})
